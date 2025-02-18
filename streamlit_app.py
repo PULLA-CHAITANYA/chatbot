@@ -3,8 +3,8 @@ import time
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 import hashlib
 
-# Load the ALBERT model and tokenizer from Hugging Face
-model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model on Hugging Face
+# Use the pre-trained DistilBERT model for Question Answering from Hugging Face
+model_name = "distilbert-base-uncased-distilled-squad"  # Pre-trained model from Hugging Face
 
 # Use the slow tokenizer explicitly (set use_fast=False) to avoid errors
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
