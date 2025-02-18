@@ -49,7 +49,7 @@ def main():
             if st.button("Login", key="login"):
                 if authenticate(username, password):
                     st.session_state['authenticated'] = True
-                    st.session_state['current_page'] = "Claim Status"
+                    st.session_state['current_page'] = "Home"
                     st.success("Login successful!")
                     time.sleep(1)
                     st.rerun()
@@ -59,11 +59,11 @@ def main():
         st.sidebar.title("Navigation")
 
         if 'current_page' not in st.session_state:
-            st.session_state['current_page'] = "Claim Status"
+            st.session_state['current_page'] = "Home"
 
-        page = st.sidebar.radio("Go to:", ["Claim Status", "Inquiry Form"],
+        page = st.sidebar.radio("Go to:", ["Home", "Claim Status", "Inquiry Form"],
                                key="page_radio",
-                               index=["Claim Status", "Inquiry Form"].index(st.session_state['current_page']))
+                               index=["Home", "Claim Status", "Inquiry Form"].index(st.session_state['current_page']))
 
         if page != st.session_state['current_page']:
             st.session_state['current_page'] = page
@@ -72,7 +72,20 @@ def main():
         st.title(page)
         st.write(f"### Welcome to {page}!")
 
-        if page == "Claim Status":
+        if page == "Home":
+            st.write("## AI Help Desk")
+            st.write("""
+                Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
+                
+                **Key Features:**
+                * Intelligent query handling for insurance plans and claims.
+                * Real-time information retrieval for accurate responses.
+                * Seamless user experience with automated assistance.
+                * AI-powered insights for better decision-making.
+                
+                Stay tuned for continuous improvements and updates to enhance your experience!
+            """)
+        elif page == "Claim Status":
             st.write("## Claim Status")
             st.write("Check the status of your submitted claims here.")
             # ... (Add claim status display)
