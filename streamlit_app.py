@@ -33,7 +33,7 @@ if os.path.exists(safetensors_file):
     # Open safetensors file
     with safe_open(safetensors_file, framework="pt") as f:
         model_weights = {key: f.get_tensor(key) for key in f.keys()}
-        
+
     # Load model and assign the weights
     model = AutoModelForQuestionAnswering.from_pretrained(model_path, config=model_path)
     model.load_state_dict(model_weights)
@@ -42,7 +42,8 @@ else:
     print("No safetensors file found. Please ensure the model is correctly placed.")
     # Fallback for loading a regular pytorch model
     model = AutoModelForQuestionAnswering.from_pretrained(model_path)
-    
+
+# Load tokenizer explicitly from the model directory
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
 # Create the Question Answering pipeline
