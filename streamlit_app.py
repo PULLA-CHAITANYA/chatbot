@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import hashlib
 from transformers import AutoModelForMaskedLM, AutoTokenizer, pipeline
+import os
 
 # Placeholder for user data (replace with a database or secure storage)
 users = {}
@@ -21,10 +22,13 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Load ALBERT model and tokenizer explicitly
-model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model path on Hugging Face
-model = AutoModelForMaskedLM.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+# Load ALBERT model and tokenizer from local space
+model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"  # Updated path to your model
+if os.path.exists(model_path):
+    model = AutoModelForMaskedLM.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+else:
+    st.error(f"Model path {model_path} does not exist. Please check the path.")
 
 # Create the masked language modeling pipeline
 generator = pipeline('fill-mask', model=model, tokenizer=tokenizer, framework='pt')
