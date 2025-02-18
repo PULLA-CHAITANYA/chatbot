@@ -63,7 +63,7 @@ def main():
 
         page = st.sidebar.radio("Go to:", ["Home", "Claim Enquiry", "Inquiry Form"],
                                key="page_radio",
-                               index=["Home", "Claim Status", "Inquiry Form"].index(st.session_state['current_page']))
+                               index=["Home", "Claim Enquiry", "Inquiry Form"].index(st.session_state['current_page']))
 
         if page != st.session_state['current_page']:
             st.session_state['current_page'] = page
