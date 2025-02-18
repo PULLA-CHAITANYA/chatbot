@@ -3,9 +3,9 @@ import time
 import requests
 import hashlib
 
-# Your Gemini API endpoint and API key
-GEMINI_API_URL = "https://api.gemini.com/v1/generate"  # Make sure this is the correct endpoint for your Gemini API
-GEMINI_API_KEY = "AIzaSyA8YRqamDwJKDORC_791mwqR3GaP81Pvyc"  # Your Gemini API Key
+# Hugging Face API information
+HF_API_URL = "https://api-inference.huggingface.co/models/gpt-3.5-turbo"  # Use your model's URL
+HF_API_TOKEN = "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"  # Replace this with your Hugging Face API token
 
 # Streamlit authentication logic (remains the same)
 users = {}
@@ -23,22 +23,22 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Function to call Gemini API to generate response
-def get_gemini_response(user_input):
+# Function to call Hugging Face API to generate response
+def get_huggingface_response(user_input):
     headers = {
-        'Authorization': f"Bearer {GEMINI_API_KEY}",
+        'Authorization': f'Bearer {HF_API_TOKEN}',
         'Content-Type': 'application/json'
     }
+    
     payload = {
-        "input": user_input,
-        "model": "gemini-1.0"  # Use the appropriate model identifier, if necessary
+        "inputs": user_input
     }
     
     try:
-        response = requests.post(GEMINI_API_URL, json=payload, headers=headers)
+        response = requests.post(HF_API_URL, json=payload, headers=headers)
         response.raise_for_status()  # Check if the request was successful
         data = response.json()
-        return data['response']  # Adjust this based on the actual response structure of the API
+        return data[0]['generated_text']  # This depends on the actual response format from the model
     except requests.exceptions.RequestException as e:
         return f"Error: {e}"
 
@@ -124,7 +124,7 @@ def main():
                 if user_input:
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    ai_response = get_gemini_response(user_input)
+                    ai_response = get_huggingface_response(user_input)
 
                     st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.rerun()  # Use st.rerun()
