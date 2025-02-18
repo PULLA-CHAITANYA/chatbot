@@ -1,5 +1,5 @@
-streamlit==1.19.0
-torch==1.10.0
+streamlit==1.42.1
+torch==2.1.0  # Compatible with Python 3.11
 transformers==4.18.0
 pytorch-lightning==1.5.10
 scikit-learn==1.0.1
