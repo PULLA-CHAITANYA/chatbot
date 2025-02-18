@@ -1,41 +1,65 @@
 import streamlit as st
 import time
-import bcrypt
+import hashlib
 
 # Placeholder for user data (replace with a database or secure storage)
-users = {}  # Initialize an empty dictionary for users
+users = {}
+
+def simple_hash(password):  # Simple hashing function (INSECURE - for demo only)
+    return hashlib.sha256(password.encode()).hexdigest()
 
 # Hash the default password (do this offline and store the hash)
 default_password = "password123"
-default_password_hash = bcrypt.hashpw(default_password.encode('utf-8'), bcrypt.gensalt())
-users["admin"] = default_password_hash  # Set the admin user with the hashed password
+default_password_hash = simple_hash(default_password)
+users["admin"] = default_password_hash
 
 def authenticate(username, password):
     if username in users:
-        hashed_password = users[username]
-        return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+        stored_hash = users[username]
+        entered_hash = simple_hash(password)
+        return stored_hash == entered_hash
     return False
 
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
 
-    # ... (styling code remains the same)
+    st.markdown("""
+    <style>
+    body {
+        background: linear-gradient(45deg, #6a11cb, #2575fc);
+        color: white;
+        font-family: 'Roboto', sans-serif;
+    }
+    .header {
+        font-size: 24px;
+        font-weight: bold;
+        color: #FFEB3B;
+    }
+    /* ... (rest of your CSS styles) ... */
+    </style>
+    """, unsafe_allow_html=True)  # Include your CSS here
 
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
 
     if not st.session_state['authenticated']:
-        # ... (login form code)
+        st.markdown("<div class='slide-in'>", unsafe_allow_html=True)  # Slide-in animation
 
-        if st.button("Login", key="login"):
-            if authenticate(username, password):
-                st.session_state['authenticated'] = True
-                st.session_state['current_page'] = "AI Chatbot"
-                st.success("Login successful!")
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error("Invalid username or password")
+        st.subheader("Sign In")
+        with st.container():
+            username = st.text_input("Username", key="username")
+            password = st.text_input("Password", type="password", key="password")
+            if st.button("Login", key="login"):
+                if authenticate(username, password):
+                    st.session_state['authenticated'] = True
+                    st.session_state['current_page'] = "AI Chatbot"
+                    st.success("Login successful!")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("Invalid username or password")
+
+        st.markdown("</div>", unsafe_allow_html=True)  # Close slide-in div
 
     else:
         st.sidebar.title("Navigation")
