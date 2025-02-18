@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 import hashlib
+from transformers import pipeline
 
 # Placeholder for user data (replace with a database or secure storage)
 users = {}
@@ -20,10 +21,14 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
+# Load model and tokenizer from Hugging Face Hub
+model_name = "your-username/your-model-name"  # Replace with your model path on Hugging Face
+generator = pipeline('text-generation', model=model_name)
+
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
 
-    st.markdown("""
+    st.markdown(""" 
     <style>
     body {
         background: linear-gradient(45deg, #6a11cb, #2575fc);
@@ -76,13 +81,13 @@ def main():
             st.write("## AI Help Desk")
             st.write("""
                 Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
-                
+
                 **Key Features:**
                 * Intelligent query handling for insurance plans and claims.
                 * Real-time information retrieval for accurate responses.
                 * Seamless user experience with automated assistance.
                 * AI-powered insights for better decision-making.
-                
+
                 Stay tuned for continuous improvements and updates to enhance your experience!
             """)
         elif page == "Claim Enquiry":
@@ -96,14 +101,17 @@ def main():
             # Display chat messages
             for msg in st.session_state['messages']:
                 st.markdown(f"**{msg['sender']}**: {msg['text']}")
-            
+
             # Input and button for sending messages
             user_input = st.text_input("Ask about your claim status:", key="user_input")
             if st.button("Send", key="send"):
                 if user_input:
-                    # Simulate bot response (you can replace it with actual logic)
+                    # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
-                    st.session_state['messages'].append({"sender": "AI", "text": "Your claim is being processed. Please check back later."})
+
+                    # Get AI response from Hugging Face model
+                    ai_response = generator(user_input, max_length=100, num_return_sequences=1)[0]['generated_text']
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.experimental_rerun()
 
         elif page == "Inquiry Form":
