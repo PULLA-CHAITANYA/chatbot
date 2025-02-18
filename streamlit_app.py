@@ -1,120 +1,89 @@
 import streamlit as st
-import time
 import hashlib
+import branding
+import dbfunctions
+import webbrowser
+import usermanagement as usr
 
-# Placeholder for user data (replace with a database or secure storage)
-users = {}
+branding.loadBranding()
 
-def simple_hash(password):  # Simple hashing function (INSECURE - for demo only)
-    return hashlib.sha256(password.encode()).hexdigest()
+def createUser(email, password, username):
+    dbfunctions.executeWithoutFetch(f"INSERT INTO \"user\" (username, password, mail, fk_usergroupid) VALUES ('{username}', '{password}', '{email}', 2);")
+    userdata = dbfunctions.executeQuery(f"SELECT DISTINCT username, password, userid from \"user\" WHERE mail = '{email}';")
+    st.session_state['loginSucceed'] = True
+    st.session_state['username'] = username
+    st.session_state['userid'] = userdata[0][2]
+    st.sidebar.success('Account created.', icon="✅")
 
-# Hash the default password (do this offline and store the hash)
-default_password = "password123"
-default_password_hash = simple_hash(default_password)
-users["admin"] = default_password_hash
-
-def authenticate(username, password):
-    if username in users:
-        stored_hash = users[username]
-        entered_hash = simple_hash(password)
-        return stored_hash == entered_hash
-    return False
-
-def main():
-    st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
-
-    st.markdown("""
-    <style>
-    body {
-        background: linear-gradient(45deg, #6a11cb, #2575fc);
-        color: white;
-        font-family: 'Roboto', sans-serif;
-    }
-    .login-box {
-        padding: 20px;
-        background: rgba(0, 0, 0, 0.5);
-        border-radius: 10px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    if 'authenticated' not in st.session_state:
-        st.session_state['authenticated'] = False
-
-    if not st.session_state['authenticated']:
-        st.subheader("Sign In")
-        with st.container():
-            username = st.text_input("Username", key="username")
-            password = st.text_input("Password", type="password", key="password")
-            if st.button("Login", key="login"):
-                if authenticate(username, password):
-                    st.session_state['authenticated'] = True
-                    st.session_state['current_page'] = "Home"
-                    st.success("Login successful!")
-                    time.sleep(1)
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password")
+def collectUserinfo(email, password):
+    username = st.sidebar.text_input('Username')
+    createBtn = st.sidebar.button('Register account')
+    if createBtn:
+        createUser(email, password, username)
     else:
-        st.sidebar.title("Navigation")
+        st.sidebar.warning('Account not created', icon="ℹ️")
 
-        if 'current_page' not in st.session_state:
-            st.session_state['current_page'] = "Home"
+def loginUser(email, password):
+    userdata = dbfunctions.executeQuery(f"SELECT DISTINCT username, password, userid from \"user\" WHERE mail = '{email}';")
+    if userdata:
+        username = userdata[0][0]
+        correctPW = userdata[0][1]
+        userid = userdata[0][2]
+        if password == correctPW:
+            st.session_state['loginSucceed'] = True
+            st.session_state['username'] = username
+            st.session_state['userid'] = userid
+            st.sidebar.info('Welcome back', icon="👋🏻")
+        else:
+            st.session_state['loginSucceed'] = False
+            st.sidebar.warning('Wrong password')
+    else:
+        createUser(email, password, email)
 
-        page = st.sidebar.radio("Go to:", ["Home", "Claim Enquiry", "Inquiry Form"],
-                               key="page_radio",
-                               index=["Home", "Claim Enquiry", "Inquiry Form"].index(st.session_state['current_page']))
+st.write("""
+# mangoTicket by Michi
+""")
 
-        if page != st.session_state['current_page']:
-            st.session_state['current_page'] = page
-            st.rerun()
+metricAllTickets, metricOpenTickets = st.columns(2)
+countAllTickets = dbfunctions.executeQuery("SELECT * from \"alltickets-count\"")
+countOpenTickets = dbfunctions.executeQuery("SELECT * from \"opentickets-count\"")
+if not (countAllTickets[0][0] * -100) == 0:
+    openTicketDelta = round(countOpenTickets[0][0] / countAllTickets[0][0] * -100)
+else:
+    openTicketDelta = 0
+metricAllTickets.metric(label="All tickets", value=f"{countAllTickets[0][0]}")
+metricOpenTickets.metric(label="Open tickets", value=f"{countOpenTickets[0][0]}", delta=f"{openTicketDelta} %")
 
-        st.title(page)
-        st.write(f"### Welcome to {page}!")
+st.write("""
+This is a simple helpdesk tool. You can create different users and assign tickets to them. You can also create a database with customers. Each ticket can be assigned to a customer.
+The tool is currently under development and still has some bugs/problems. If you have a suggestion, feel free to create an issue on GitHub so I can follow up on it.
+""")
 
-        if page == "Home":
-            st.write("## AI Help Desk")
-            st.write("""
-                Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
-                
-                **Key Features:**
-                * Intelligent query handling for insurance plans and claims.
-                * Real-time information retrieval for accurate responses.
-                * Seamless user experience with automated assistance.
-                * AI-powered insights for better decision-making.
-                
-                Stay tuned for continuous improvements and updates to enhance your experience!
-            """)
-        elif page == "Claim Enquiry":
-            st.write("## Claim Enquiry")
-            st.write("Check the status of your submitted claims here.")
-            
-            # Chat interface
-            if 'messages' not in st.session_state:
-                st.session_state['messages'] = []
+if st.button("View project on GitHub"):
+    webbrowser.open_new_tab("https://github.com/michivonah/helpdesk")
 
-            # Display chat messages
-            for msg in st.session_state['messages']:
-                st.markdown(f"**{msg['sender']}**: {msg['text']}")
-            
-            # Input and button for sending messages
-            user_input = st.text_input("Ask about your claim status:", key="user_input")
-            if st.button("Send", key="send"):
-                if user_input:
-                    # Simulate bot response (you can replace it with actual logic)
-                    st.session_state['messages'].append({"sender": "User", "text": user_input})
-                    st.session_state['messages'].append({"sender": "AI", "text": "Your claim is being processed. Please check back later."})
-                    st.experimental_rerun()
+if st.button("Self host"):
+    webbrowser.open_new_tab("https://hub.docker.com/r/michivonah/mangoticket")
 
-        elif page == "Inquiry Form":
-            st.write("## Inquiry Form")
-            st.write("Submit your inquiries using the form below.")
-            # ... (Add inquiry form elements)
+if not usr.checkLogin():
+    st.sidebar.markdown("# Login/Register")
+    st.session_state['loginSucceed'] = False
+    email = st.sidebar.text_input('Mail')
+    password = st.sidebar.text_input('Password', type="password")        
+    loginBtn = st.sidebar.button('Sign in')
 
-        if st.button("Logout", key="logout"):
-            st.session_state['authenticated'] = False
-            st.session_state.pop('current_page')
-            st.rerun()
+    if loginBtn:
+        st.session_state['email'] = email
+        passwordHashed = hashlib.sha256(password.encode())
+        st.session_state['password'] = passwordHashed.hexdigest()
+        loginUser(email, st.session_state.password)
+        st.experimental_rerun()
 
-if __name__ == "__main__":
-    main()
+else:
+    st.sidebar.info('Welcome back', icon="👋🏻")
+    logoutBtn = st.sidebar.button("Logout")
+
+    if logoutBtn:
+        usr.logout()
+        st.sidebar.info('Logged out')
+        st.experimental_rerun()
