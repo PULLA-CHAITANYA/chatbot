@@ -1,12 +1,13 @@
 import streamlit as st
 import time
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+import hashlib
 
 # Load the ALBERT model and tokenizer from Hugging Face
 model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model on Hugging Face
 
-# Use the fast tokenizer, trying without specifying use_fast (let the library decide)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+# Use the slow tokenizer explicitly (set use_fast=False)
+tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
 model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
 # Create a question-answering pipeline
