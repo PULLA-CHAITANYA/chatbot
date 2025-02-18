@@ -1,21 +1,22 @@
 import streamlit as st
 import time
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
 import hashlib
 
-# Load the DistilBERT model and tokenizer from Hugging Face
-model_name = "distilbert-base-uncased-distilled-squad"  # Using a pretrained model from Hugging Face
+# Load a generative model (e.g., GPT-2)
+model_name = "gpt2"  # Or "gpt2-medium", "gpt2-large", etc. for larger models
+try:
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+    generator = pipeline('text-generation', model=model, tokenizer=tokenizer)
+except Exception as e:
+    st.error(f"Error loading model: {e}.  Please ensure you have an internet connection and sufficient resources.")
+    st.stop()  # Stop execution if model loading fails
 
-# Load tokenizer and model
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
-# Create a question-answering pipeline
-qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
-
-# Streamlit authentication logic
+# Streamlit authentication logic (remains the same)
 users = {}
-def simple_hash(password):  
+def simple_hash(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 default_password = "password123"
@@ -29,11 +30,11 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Streamlit app layout and interaction logic
+
 def main():
     st.set_page_config(page_title="AI Help Desk", page_icon="🤖", layout="wide")
 
-    st.markdown(""" 
+    st.markdown("""
     <style>
     body {
         background: linear-gradient(45deg, #6a11cb, #2575fc);
@@ -62,7 +63,7 @@ def main():
                     st.session_state['current_page'] = "Home"
                     st.success("Login successful!")
                     time.sleep(1)
-                    st.rerun()  # Use st.rerun() here instead of st.experimental_rerun()
+                    st.experimental_rerun()
                 else:
                     st.error("Invalid username or password")
     else:
@@ -72,19 +73,19 @@ def main():
             st.session_state['current_page'] = "Home"
 
         page = st.sidebar.radio("Go to:", ["Home", "Claim Enquiry", "Inquiry Form"],
-                               key="page_radio",
-                               index=["Home", "Claim Enquiry", "Inquiry Form"].index(st.session_state['current_page']))
+                                key="page_radio",
+                                index=["Home", "Claim Enquiry", "Inquiry Form"].index(st.session_state['current_page']))
 
         if page != st.session_state['current_page']:
             st.session_state['current_page'] = page
-            st.rerun()  # Use st.rerun() here instead of st.experimental_rerun()
+            st.experimental_rerun()
 
         st.title(page)
         st.write(f"### Welcome to {page}!")
 
         if page == "Home":
             st.write("## AI Help Desk")
-            st.write(""" 
+            st.write("""
                 Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
 
                 **Key Features:**
@@ -95,43 +96,54 @@ def main():
 
                 Stay tuned for continuous improvements and updates to enhance your experience!
             """)
+
         elif page == "Claim Enquiry":
             st.write("## Claim Enquiry")
             st.write("Check the status of your submitted claims here.")
-            
-            # Chat interface
+
             if 'messages' not in st.session_state:
                 st.session_state['messages'] = []
 
-            # Display chat messages
             for msg in st.session_state['messages']:
                 st.markdown(f"**{msg['sender']}**: {msg['text']}")
 
-            # Input and button for sending messages
             user_input = st.text_input("Ask about your claim status:", key="user_input")
             if st.button("Send", key="send"):
                 if user_input:
-                    # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response using the QA pipeline
-                    context = "The claim status for your request is pending."  # This context could be dynamic or fetched from a database
-                    result = qa_pipeline({'context': context, 'question': user_input})
-                    ai_response = result['answer']
-                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
+                    try:
+                        prompt = f"User: {user_input}\nAI:"
+                        generated_text = generator(prompt, 
+                                                    max_length=150,  # Adjust as needed
+                                                    num_return_sequences=1,
+                                                    pad_token_id=tokenizer.eos_token_id)  # Handle padding
+                        ai_response = generated_text[0]['generated_text']
+                        ai_response = ai_response.split("AI:")[1].strip() # Remove the prompt from the response
 
-                    # Refreshing the UI without rerun
-                    st.rerun()  # Use st.rerun() here instead of st.experimental_rerun()
+                    except Exception as e:
+                        ai_response = f"Error processing your request: {e}"
+                        st.error(ai_response)
+
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
+                    st.experimental_rerun()
 
         elif page == "Inquiry Form":
-            st.write("## Inquiry Form")
-            st.write("Submit your inquiries using the form below.")
-            # ... (Add inquiry form elements)
+             st.write("## Inquiry Form")
+             st.write("Submit your inquiries using the form below.")
+             st.text_input("Your Name", key="name")
+             st.text_area("Your Inquiry", key="inquiry")
+             st.button("Submit Inquiry", key="submit_inquiry") # Add functionality as needed
+
 
         if st.button("Logout", key="logout"):
             st.session_state['authenticated'] = False
-            st.session_state.pop('current_page')
-            st.rerun()  # Use st.rerun() here instead of st.experimental_rerun()
+            if 'current_page' in st.session_state:
+                st.session_state.pop('current_page')
+            if 'messages' in st.session_state:
+                st.session_state.pop('messages')
+            st.experimental_rerun()
+
 
 if __name__ == "__main__":
     main()
