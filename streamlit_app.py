@@ -22,10 +22,10 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Load ALBERT model and tokenizer explicitly from local directory
-model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"  # Your local model path
-model = AutoModelForQuestionAnswering.from_pretrained(model_path)
-tokenizer = AutoTokenizer.from_pretrained(model_path)
+# Load ALBERT model and tokenizer from Hugging Face
+model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model on Hugging Face
+model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 # Create a question answering pipeline
 qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
