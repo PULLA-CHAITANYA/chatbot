@@ -1,5 +1,5 @@
 streamlit==1.19.0
-torch==2.2.0
+torch==2.3.0  # or another version that works with your Python version
 transformers==4.18.0
 pytorch-lightning==1.5.10
 scikit-learn==1.1.0
