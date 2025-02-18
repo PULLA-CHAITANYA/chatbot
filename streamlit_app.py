@@ -10,9 +10,8 @@ try:
     model = AutoModelForCausalLM.from_pretrained(model_name)
     generator = pipeline('text-generation', model=model, tokenizer=tokenizer)
 except Exception as e:
-    st.error(f"Error loading model: {e}.  Please ensure you have an internet connection and sufficient resources.")
+    st.error(f"Error loading model: {e}. Please ensure you have an internet connection and sufficient resources.")
     st.stop()  # Stop execution if model loading fails
-
 
 # Streamlit authentication logic (remains the same)
 users = {}
@@ -30,11 +29,10 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-
 def main():
     st.set_page_config(page_title="AI Help Desk", page_icon="🤖", layout="wide")
 
-    st.markdown("""
+    st.markdown(""" 
     <style>
     body {
         background: linear-gradient(45deg, #6a11cb, #2575fc);
@@ -63,7 +61,7 @@ def main():
                     st.session_state['current_page'] = "Home"
                     st.success("Login successful!")
                     time.sleep(1)
-                    st.experimental_rerun()
+                    st.rerun()  # Use st.rerun()
                 else:
                     st.error("Invalid username or password")
     else:
@@ -78,14 +76,14 @@ def main():
 
         if page != st.session_state['current_page']:
             st.session_state['current_page'] = page
-            st.experimental_rerun()
+            st.rerun()  # Use st.rerun()
 
         st.title(page)
         st.write(f"### Welcome to {page}!")
 
         if page == "Home":
             st.write("## AI Help Desk")
-            st.write("""
+            st.write(""" 
                 Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
 
                 **Key Features:**
@@ -115,26 +113,25 @@ def main():
                     try:
                         prompt = f"User: {user_input}\nAI:"
                         generated_text = generator(prompt, 
-                                                    max_length=150,  # Adjust as needed
+                                                    max_length=150,
                                                     num_return_sequences=1,
-                                                    pad_token_id=tokenizer.eos_token_id)  # Handle padding
+                                                    pad_token_id=tokenizer.eos_token_id)
                         ai_response = generated_text[0]['generated_text']
-                        ai_response = ai_response.split("AI:")[1].strip() # Remove the prompt from the response
+                        ai_response = ai_response.split("AI:")[1].strip()
 
                     except Exception as e:
                         ai_response = f"Error processing your request: {e}"
                         st.error(ai_response)
 
                     st.session_state['messages'].append({"sender": "AI", "text": ai_response})
-                    st.experimental_rerun()
+                    st.rerun()  # Use st.rerun()
 
         elif page == "Inquiry Form":
-             st.write("## Inquiry Form")
-             st.write("Submit your inquiries using the form below.")
-             st.text_input("Your Name", key="name")
-             st.text_area("Your Inquiry", key="inquiry")
-             st.button("Submit Inquiry", key="submit_inquiry") # Add functionality as needed
-
+            st.write("## Inquiry Form")
+            st.write("Submit your inquiries using the form below.")
+            st.text_input("Your Name", key="name")
+            st.text_area("Your Inquiry", key="inquiry")
+            st.button("Submit Inquiry", key="submit_inquiry") # Add functionality as needed
 
         if st.button("Logout", key="logout"):
             st.session_state['authenticated'] = False
@@ -142,7 +139,7 @@ def main():
                 st.session_state.pop('current_page')
             if 'messages' in st.session_state:
                 st.session_state.pop('messages')
-            st.experimental_rerun()
+            st.rerun()  # Use st.rerun()
 
 
 if __name__ == "__main__":
