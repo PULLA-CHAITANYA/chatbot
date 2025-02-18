@@ -22,7 +22,7 @@ def authenticate(username, password):
     return False
 
 # Load model and tokenizer from Hugging Face Hub
-model_name = "your-username/your-model-name"  # Replace with your model path on Hugging Face
+model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model path on Hugging Face
 generator = pipeline('text-generation', model=model_name)
 
 def main():
