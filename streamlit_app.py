@@ -1,23 +1,6 @@
 import streamlit as st
 import time
-
-# Function to simulate a splash screen with animation
-def splash_screen():
-    st.markdown("""
-    <style>
-    .centered {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 80vh;
-    }
-    </style>
-    <div class='centered'>
-        <h2>🔄 Loading AI Dashboard...</h2>
-    </div>
-    """, unsafe_allow_html=True)
-    time.sleep(3)
-    st.session_state['splash_shown'] = True
+import streamlit.components.v1 as components
 
 # Authentication logic
 def authenticate(username, password):
@@ -27,14 +10,29 @@ def authenticate(username, password):
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
     
-    if 'splash_shown' not in st.session_state:
-        splash_screen()
-        st.experimental_rerun()
-
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
     
     if not st.session_state['authenticated']:
+        st.markdown("""
+        <style>
+        @keyframes slideIn {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        </style>
+        <div class='slide-in'>
+        """, unsafe_allow_html=True)
+        
         st.subheader("Sign In")
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
@@ -43,9 +41,11 @@ def main():
                 st.session_state['authenticated'] = True
                 st.success("Login successful!")
                 time.sleep(1)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Invalid username or password")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     else:
         st.sidebar.title("Navigation")
         page = st.sidebar.radio("Go to:", ["AI Chatbot", "Claim Status", "Dashboard", "Inquiry Form"])
@@ -56,7 +56,7 @@ def main():
         
         if st.button("Logout"):
             st.session_state['authenticated'] = False
-            st.experimental_rerun()
+            st.rerun()
 
 if __name__ == "__main__":
     main()
