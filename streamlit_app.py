@@ -1,17 +1,11 @@
 import streamlit as st
 import time
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+import requests
 import hashlib
 
-# Load a generative model (e.g., GPT-2)
-model_name = "gpt2"  # Or "gpt2-medium", "gpt2-large", etc. for larger models
-try:
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    generator = pipeline('text-generation', model=model, tokenizer=tokenizer)
-except Exception as e:
-    st.error(f"Error loading model: {e}. Please ensure you have an internet connection and sufficient resources.")
-    st.stop()  # Stop execution if model loading fails
+# Your Gemini API endpoint and API key
+GEMINI_API_URL = "https://api.gemini.com/v1/generate"  # Make sure this is the correct endpoint for your Gemini API
+GEMINI_API_KEY = "AIzaSyA8YRqamDwJKDORC_791mwqR3GaP81Pvyc"  # Your Gemini API Key
 
 # Streamlit authentication logic (remains the same)
 users = {}
@@ -28,6 +22,25 @@ def authenticate(username, password):
         entered_hash = simple_hash(password)
         return stored_hash == entered_hash
     return False
+
+# Function to call Gemini API to generate response
+def get_gemini_response(user_input):
+    headers = {
+        'Authorization': f"Bearer {GEMINI_API_KEY}",
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "input": user_input,
+        "model": "gemini-1.0"  # Use the appropriate model identifier, if necessary
+    }
+    
+    try:
+        response = requests.post(GEMINI_API_URL, json=payload, headers=headers)
+        response.raise_for_status()  # Check if the request was successful
+        data = response.json()
+        return data['response']  # Adjust this based on the actual response structure of the API
+    except requests.exceptions.RequestException as e:
+        return f"Error: {e}"
 
 def main():
     st.set_page_config(page_title="AI Help Desk", page_icon="🤖", layout="wide")
@@ -83,7 +96,7 @@ def main():
 
         if page == "Home":
             st.write("## AI Help Desk")
-            st.write(""" 
+            st.write("""
                 Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
 
                 **Key Features:**
@@ -103,25 +116,15 @@ def main():
                 st.session_state['messages'] = []
 
             for msg in st.session_state['messages']:
-                st.markdown(f"**{msg['sender']}**: {msg['text']}")
+                if msg['sender'] == "AI":  # Only show AI responses
+                    st.markdown(f"**{msg['sender']}**: {msg['text']}")
 
             user_input = st.text_input("Ask about your claim status:", key="user_input")
             if st.button("Send", key="send"):
                 if user_input:
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    try:
-                        prompt = f"User: {user_input}\nAI:"
-                        generated_text = generator(prompt, 
-                                                    max_length=150,
-                                                    num_return_sequences=1,
-                                                    pad_token_id=tokenizer.eos_token_id)
-                        ai_response = generated_text[0]['generated_text']
-                        ai_response = ai_response.split("AI:")[1].strip()
-
-                    except Exception as e:
-                        ai_response = f"Error processing your request: {e}"
-                        st.error(ai_response)
+                    ai_response = get_gemini_response(user_input)
 
                     st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.rerun()  # Use st.rerun()
