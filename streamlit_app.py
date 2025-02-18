@@ -1,25 +1,22 @@
 import streamlit as st
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
-import hashlib
 import time
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
-# Load ALBERT model and tokenizer from Hugging Face
+# Load the ALBERT model and tokenizer from Hugging Face
 model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model on Hugging Face
 
-# Use fast tokenizer if possible
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+# Use the fast tokenizer, trying without specifying use_fast (let the library decide)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
-# Create a question answering pipeline
+# Create a question-answering pipeline
 qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
 
-# Placeholder for user data (replace with a database or secure storage)
+# Streamlit authentication logic
 users = {}
-
-def simple_hash(password):  # Simple hashing function (INSECURE - for demo only)
+def simple_hash(password):  
     return hashlib.sha256(password.encode()).hexdigest()
 
-# Hash the default password (do this offline and store the hash)
 default_password = "password123"
 default_password_hash = simple_hash(default_password)
 users["admin"] = default_password_hash
@@ -31,15 +28,28 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
+# Streamlit app layout and interaction logic
 def main():
-    # Streamlit Page Configuration
     st.set_page_config(page_title="AI Help Desk", page_icon="🤖", layout="wide")
 
-    # Check for authentication status
+    st.markdown(""" 
+    <style>
+    body {
+        background: linear-gradient(45deg, #6a11cb, #2575fc);
+        color: white;
+        font-family: 'Roboto', sans-serif;
+    }
+    .login-box {
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
 
-    # Handle login if not authenticated
     if not st.session_state['authenticated']:
         st.subheader("Sign In")
         with st.container():
@@ -54,43 +64,41 @@ def main():
                     st.rerun()
                 else:
                     st.error("Invalid username or password")
-
-    # If authenticated, show the main app with pages
-    if st.session_state['authenticated']:
+    else:
         st.sidebar.title("Navigation")
-        page = st.sidebar.radio("Go to:", ["Home", "Inquiry Form", "Claim Enquiry"])
 
-        # Handle page navigation
+        if 'current_page' not in st.session_state:
+            st.session_state['current_page'] = "Home"
+
+        page = st.sidebar.radio("Go to:", ["Home", "Claim Enquiry", "Inquiry Form"],
+                               key="page_radio",
+                               index=["Home", "Claim Enquiry", "Inquiry Form"].index(st.session_state['current_page']))
+
+        if page != st.session_state['current_page']:
+            st.session_state['current_page'] = page
+            st.rerun()
+
+        st.title(page)
+        st.write(f"### Welcome to {page}!")
+
         if page == "Home":
-            st.title("Welcome to AI Help Desk")
-            st.write("""
-                Welcome to the AI Help Desk! Here, you can ask questions related to your insurance plans, claims, and more.
+            st.write("## AI Help Desk")
+            st.write(""" 
+                Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
+
+                **Key Features:**
+                * Intelligent query handling for insurance plans and claims.
+                * Real-time information retrieval for accurate responses.
+                * Seamless user experience with automated assistance.
+                * AI-powered insights for better decision-making.
+
+                Stay tuned for continuous improvements and updates to enhance your experience!
             """)
-
-        elif page == "Inquiry Form":
-            st.title("Submit Your Inquiry")
-            st.write("""
-                If you have any questions, feel free to ask below. Our AI Help Desk will provide quick and accurate responses.
-            """)
-
-            # Create a form to capture user inquiry (question)
-            question = st.text_input("Ask a question about insurance or claims:")
-
-            if question:
-                # Get the model's response
-                answer = qa_pipeline({
-                    'context': "This is a placeholder context. Replace with relevant context from your insurance data.",
-                    'question': question
-                })
-                st.write(f"**Answer:** {answer['answer']}")
-
         elif page == "Claim Enquiry":
-            st.title("Claim Enquiry")
-            st.write("""
-                Check the status of your submitted claims here.
-            """)
+            st.write("## Claim Enquiry")
+            st.write("Check the status of your submitted claims here.")
             
-            # Chat interface for checking claim status
+            # Chat interface
             if 'messages' not in st.session_state:
                 st.session_state['messages'] = []
 
@@ -105,18 +113,20 @@ def main():
                     # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response using the pipeline
-                    answer = qa_pipeline({
-                        'context': "This is a placeholder context for claim status. Replace with real data.",
-                        'question': user_input
-                    })
-                    st.session_state['messages'].append({"sender": "AI", "text": answer['answer']})
+                    # Get AI response using the QA pipeline
+                    result = qa_pipeline({'context': "The claim status for your request is pending.", 'question': user_input})
+                    ai_response = result['answer']
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.experimental_rerun()
 
-        # Optional: Add a logout button
-        if st.button("Logout"):
+        elif page == "Inquiry Form":
+            st.write("## Inquiry Form")
+            st.write("Submit your inquiries using the form below.")
+            # ... (Add inquiry form elements)
+
+        if st.button("Logout", key="logout"):
             st.session_state['authenticated'] = False
-            st.session_state.pop('current_page', None)
+            st.session_state.pop('current_page')
             st.rerun()
 
 if __name__ == "__main__":
