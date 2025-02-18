@@ -88,7 +88,24 @@ def main():
         elif page == "Claim Status":
             st.write("## Claim Status")
             st.write("Check the status of your submitted claims here.")
-            # ... (Add claim status display)
+            
+            # Chat interface
+            if 'messages' not in st.session_state:
+                st.session_state['messages'] = []
+
+            # Display chat messages
+            for msg in st.session_state['messages']:
+                st.markdown(f"**{msg['sender']}**: {msg['text']}")
+            
+            # Input and button for sending messages
+            user_input = st.text_input("Ask about your claim status:", key="user_input")
+            if st.button("Send", key="send"):
+                if user_input:
+                    # Simulate bot response (you can replace it with actual logic)
+                    st.session_state['messages'].append({"sender": "User", "text": user_input})
+                    st.session_state['messages'].append({"sender": "AI", "text": "Your claim is being processed. Please check back later."})
+                    st.experimental_rerun()
+
         elif page == "Inquiry Form":
             st.write("## Inquiry Form")
             st.write("Submit your inquiries using the form below.")
