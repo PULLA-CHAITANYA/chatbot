@@ -1,7 +1,9 @@
+import os
 import streamlit as st
 import time
 import hashlib
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+from safetensors import safe_open
 
 # Placeholder for user data (replace with a database or secure storage)
 users = {}
@@ -21,13 +23,30 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Load ALBERT model and tokenizer from local path
-model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"  # Update with your local path
-model = AutoModelForQuestionAnswering.from_pretrained(model_path)
+# Define the path to the model directory
+model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"
+
+# Check if safetensors file exists
+safetensors_file = os.path.join(model_path, "model.safetensors")
+if os.path.exists(safetensors_file):
+    print("Loading model from safetensors file...")
+    # Open safetensors file
+    with safe_open(safetensors_file, framework="pt") as f:
+        model_weights = {key: f.get_tensor(key) for key in f.keys()}
+        
+    # Load model and assign the weights
+    model = AutoModelForQuestionAnswering.from_pretrained(model_path, config=model_path)
+    model.load_state_dict(model_weights)
+    print("Model loaded successfully with safetensors weights.")
+else:
+    print("No safetensors file found. Please ensure the model is correctly placed.")
+    # Fallback for loading a regular pytorch model
+    model = AutoModelForQuestionAnswering.from_pretrained(model_path)
+    
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-# Create the question answering pipeline
-qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+# Create the Question Answering pipeline
+qa_pipeline = pipeline("question-answering", model=model, tokenizer=tokenizer)
 
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
@@ -113,10 +132,11 @@ def main():
                     # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response using ALBERT's question answering
-                    context = "Your claim was processed successfully and is now in progress."  # You should update the context dynamically
-                    ai_response = qa_pipeline(question=user_input, context=context)
-                    st.session_state['messages'].append({"sender": "AI", "text": ai_response['answer']})
+                    # Get AI response using Question Answering model
+                    context = "The insurance claim process includes several steps including verification, approval, and disbursement."  # Replace with your actual context data
+                    result = qa_pipeline(question=user_input, context=context)
+                    ai_response = result['answer']
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.experimental_rerun()
 
         elif page == "Inquiry Form":
