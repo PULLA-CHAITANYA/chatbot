@@ -15,7 +15,7 @@ qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
 
 # Streamlit authentication logic
 users = {}
-def simple_hash(password):  
+def simple_hash(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 default_password = "password123"
@@ -33,7 +33,7 @@ def authenticate(username, password):
 def main():
     st.set_page_config(page_title="AI Help Desk", page_icon="🤖", layout="wide")
 
-    st.markdown(""" 
+    st.markdown("""
     <style>
     body {
         background: linear-gradient(45deg, #6a11cb, #2575fc);
@@ -59,7 +59,7 @@ def main():
             if st.button("Login", key="login"):
                 if authenticate(username, password):
                     st.session_state['authenticated'] = True
-                    st.session_state['current_page'] = "Home"
+                    st.session_state['current_page'] = "Home"  # Initialize current_page
                     st.success("Login successful!")
                     time.sleep(1)
                     st.experimental_rerun()
@@ -72,8 +72,8 @@ def main():
             st.session_state['current_page'] = "Home"
 
         page = st.sidebar.radio("Go to:", ["Home", "Claim Enquiry", "Inquiry Form"],
-                               key="page_radio",
-                               index=["Home", "Claim Enquiry", "Inquiry Form"].index(st.session_state['current_page']))
+                                key="page_radio",
+                                index=["Home", "Claim Enquiry", "Inquiry Form"].index(st.session_state['current_page']))
 
         if page != st.session_state['current_page']:
             st.session_state['current_page'] = page
@@ -83,54 +83,52 @@ def main():
         st.write(f"### Welcome to {page}!")
 
         if page == "Home":
-            st.write("## AI Help Desk")
-            st.write(""" 
-                Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
+            # ... (Home page content - no changes needed)
+            pass  # Placeholder, keep your existing Home page content here
 
-                **Key Features:**
-                * Intelligent query handling for insurance plans and claims.
-                * Real-time information retrieval for accurate responses.
-                * Seamless user experience with automated assistance.
-                * AI-powered insights for better decision-making.
-
-                Stay tuned for continuous improvements and updates to enhance your experience!
-            """)
         elif page == "Claim Enquiry":
             st.write("## Claim Enquiry")
             st.write("Check the status of your submitted claims here.")
-            
-            # Chat interface
+
             if 'messages' not in st.session_state:
                 st.session_state['messages'] = []
 
-            # Display chat messages
             for msg in st.session_state['messages']:
                 st.markdown(f"**{msg['sender']}**: {msg['text']}")
 
-            # Input and button for sending messages
             user_input = st.text_input("Ask about your claim status:", key="user_input")
             if st.button("Send", key="send"):
                 if user_input:
-                    # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response using the QA pipeline
-                    context = "The claim status for your request is pending."  # This context could be dynamic or fetched from a database
-                    result = qa_pipeline({'context': context, 'question': user_input})
-                    ai_response = result['answer']
-                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
+                    # Simulate a claim status (replace with actual database/API call)
+                    # Example statuses: "pending", "approved", "rejected"
+                    claim_status = "pending"  # Replace with actual status retrieval
 
-                    # Refreshing the UI without rerun
-                    st.experimental_rerun()
+                    context = f"The claim status for your request is {claim_status}."
+
+                    try:
+                        result = qa_pipeline({'context': context, 'question': user_input})
+                        ai_response = result['answer']
+                    except Exception as e:  # Catch potential errors during QA
+                        ai_response = f"Error processing your request: {e}"
+                        st.error(ai_response) # Display the error in Streamlit
+
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
+                    st.experimental_rerun()  # Important: Rerun to update the chat display
+
 
         elif page == "Inquiry Form":
-            st.write("## Inquiry Form")
-            st.write("Submit your inquiries using the form below.")
-            # ... (Add inquiry form elements)
+            # ... (Inquiry Form page content - no changes needed)
+            pass # Placeholder, keep your existing Inquiry Form content here
+
 
         if st.button("Logout", key="logout"):
             st.session_state['authenticated'] = False
-            st.session_state.pop('current_page')
+            if 'current_page' in st.session_state:  # Check if it exists before popping
+                st.session_state.pop('current_page')
+            if 'messages' in st.session_state: # Clear chat messages on logout
+                st.session_state.pop('messages')
             st.experimental_rerun()
 
 if __name__ == "__main__":
