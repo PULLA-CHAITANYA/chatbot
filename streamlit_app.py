@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 import hashlib
-from transformers import pipeline
+from transformers import AutoModelForMaskedLM, AutoTokenizer, pipeline
 
 # Placeholder for user data (replace with a database or secure storage)
 users = {}
@@ -21,9 +21,13 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Load model and tokenizer from Hugging Face Hub with PyTorch framework specified
+# Load ALBERT model and tokenizer explicitly
 model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model path on Hugging Face
-generator = pipeline('text-generation', model=model_name, framework='pt')  # 'pt' for PyTorch
+model = AutoModelForMaskedLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+# Create the masked language modeling pipeline
+generator = pipeline('fill-mask', model=model, tokenizer=tokenizer, framework='pt')
 
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
@@ -79,7 +83,7 @@ def main():
 
         if page == "Home":
             st.write("## AI Help Desk")
-            st.write("""
+            st.write(""" 
                 Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
 
                 **Key Features:**
@@ -109,8 +113,9 @@ def main():
                     # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response from Hugging Face model
-                    ai_response = generator(user_input, max_length=100, num_return_sequences=1)[0]['generated_text']
+                    # Get AI response using ALBERT's fill-mask (context-based completion)
+                    masked_input = f"Claim status for {user_input} is [MASK]."  # Masked placeholder for prediction
+                    ai_response = generator(masked_input, top_k=1)[0]['sequence']
                     st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.experimental_rerun()
 
