@@ -2,3 +2,4 @@ streamlit
 torch
 transformers
 safetensors
+--upgrade --force-reinstall transformers tokenizers
