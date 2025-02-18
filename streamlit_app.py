@@ -3,8 +3,8 @@ import time
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 import hashlib
 
-# Use the pre-trained DistilBERT model for Question Answering from Hugging Face
-model_name = "distilbert-base-uncased-distilled-squad"  # Pre-trained model from Hugging Face
+# Load the distilBERT model and tokenizer from Hugging Face
+model_name = "distilbert-base-uncased-distilled-squad"  # Using a popular pre-trained model for QA
 
 # Use the slow tokenizer explicitly (set use_fast=False) to avoid errors
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
@@ -62,7 +62,7 @@ def main():
                     st.session_state['current_page'] = "Home"
                     st.success("Login successful!")
                     time.sleep(1)
-                    st.rerun()
+                    st.experimental_rerun()
                 else:
                     st.error("Invalid username or password")
     else:
@@ -77,7 +77,7 @@ def main():
 
         if page != st.session_state['current_page']:
             st.session_state['current_page'] = page
-            st.rerun()
+            st.experimental_rerun()
 
         st.title(page)
         st.write(f"### Welcome to {page}!")
@@ -119,6 +119,8 @@ def main():
                     result = qa_pipeline({'context': context, 'question': user_input})
                     ai_response = result['answer']
                     st.session_state['messages'].append({"sender": "AI", "text": ai_response})
+
+                    # Refreshing the UI without rerun
                     st.experimental_rerun()
 
         elif page == "Inquiry Form":
@@ -129,7 +131,7 @@ def main():
         if st.button("Logout", key="logout"):
             st.session_state['authenticated'] = False
             st.session_state.pop('current_page')
-            st.rerun()
+            st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
