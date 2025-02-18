@@ -35,15 +35,52 @@ def main():
         font-weight: bold;
         color: #FFEB3B;
     }
-    /* ... (rest of your CSS styles) ... */
+    .subheader {
+        font-size: 18px;
+        color: #00E676;
+        font-weight: bold;
+    }
+    .content {
+        font-size: 16px;
+        color: #B2FF59;
+    }
+    .slide-in {
+        animation: slideIn 0.5s ease-out;
+    }
+    @keyframes slideIn {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    .login-box {
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+    }
+    .button {
+        background-color: #FF4081;
+        color: white;
+        border-radius: 10px;
+        padding: 10px 20px;
+    }
+    .sidebar {
+        background-color: rgba(0, 0, 0, 0.7);
+        color: #FFF;
+        border-radius: 10px;
+    }
     </style>
-    """, unsafe_allow_html=True)  # Include your CSS here
+    """, unsafe_allow_html=True)
 
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
 
     if not st.session_state['authenticated']:
-        st.markdown("<div class='slide-in'>", unsafe_allow_html=True)  # Slide-in animation
+        st.markdown("<div class='slide-in'>", unsafe_allow_html=True)
 
         st.subheader("Sign In")
         with st.container():
@@ -59,7 +96,7 @@ def main():
                 else:
                     st.error("Invalid username or password")
 
-        st.markdown("</div>", unsafe_allow_html=True)  # Close slide-in div
+        st.markdown("</div>", unsafe_allow_html=True)
 
     else:
         st.sidebar.title("Navigation")
@@ -80,7 +117,19 @@ def main():
 
         if page == "AI Chatbot":
             st.write("## AI Chatbot Details")
-            st.write("This is the AI Chatbot page.  Here you can interact with our intelligent assistant.")
+            st.write("""
+                Our AI Chatbot is a powerful tool designed to assist you with a wide range of tasks.  It leverages advanced natural language processing to understand your requests and provide helpful responses.
+
+                Here are some of the things you can do with the AI Chatbot:
+
+                * **Answer Questions:** Ask it questions about our products, services, company policies, or any other relevant topic.
+                * **Provide Support:** Get instant support with technical issues, account problems, or general inquiries.
+                * **Generate Content:** (If applicable) The chatbot can help you generate creative text formats, like poems, code, scripts, musical pieces, email, letters, etc.
+                * **Summarize Information:** Ask it to summarize lengthy documents or articles for you.
+                * **Translate Languages:** (If applicable) Translate text between different languages.
+
+                We are constantly improving the AI Chatbot, so please feel free to provide feedback on your experience.
+            """)
             st.text_area("Chat here:", "Hello! How can I assist you with the AI Chatbot?")
             # ... (Add chatbot interface here)
         elif page == "Claim Status":
