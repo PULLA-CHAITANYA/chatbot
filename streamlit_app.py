@@ -5,7 +5,7 @@ import hashlib
 
 # Hugging Face API information
 HF_API_URL = "https://api-inference.huggingface.co/models/gpt-3.5-turbo"  # Use your model's URL
-HF_API_TOKEN = "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"  # Replace this with your Hugging Face API token
+HF_API_TOKEN = "eieieieijeheueueueuue"  # Replace this with your Hugging Face API token
 
 # Streamlit authentication logic (remains the same)
 users = {}
