@@ -21,9 +21,9 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Load model and tokenizer from Hugging Face Hub
+# Load model and tokenizer from Hugging Face Hub with PyTorch framework specified
 model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model path on Hugging Face
-generator = pipeline('text-generation', model=model_name)
+generator = pipeline('text-generation', model=model_name, framework='pt')  # 'pt' for PyTorch
 
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
