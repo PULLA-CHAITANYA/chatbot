@@ -6,8 +6,8 @@ import time
 # Load ALBERT model and tokenizer from Hugging Face
 model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model on Hugging Face
 
-# Use the slow tokenizer explicitly
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+# Use fast tokenizer if possible
+tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
 model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
 # Create a question answering pipeline
