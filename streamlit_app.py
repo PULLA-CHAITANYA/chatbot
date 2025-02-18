@@ -1,8 +1,7 @@
 import streamlit as st
 import time
 import hashlib
-from transformers import AutoModelForMaskedLM, AutoTokenizer, pipeline
-import os
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 
 # Placeholder for user data (replace with a database or secure storage)
 users = {}
@@ -22,16 +21,13 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Load ALBERT model and tokenizer from local space
-model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"  # Updated path to your model
-if os.path.exists(model_path):
-    model = AutoModelForMaskedLM.from_pretrained(model_path)
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-else:
-    st.error(f"Model path {model_path} does not exist. Please check the path.")
+# Load ALBERT model and tokenizer from local path
+model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"  # Update with your local path
+model = AutoModelForQuestionAnswering.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-# Create the masked language modeling pipeline
-generator = pipeline('fill-mask', model=model, tokenizer=tokenizer, framework='pt')
+# Create the question answering pipeline
+qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
 
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
@@ -117,10 +113,10 @@ def main():
                     # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response using ALBERT's fill-mask (context-based completion)
-                    masked_input = f"Claim status for {user_input} is [MASK]."  # Masked placeholder for prediction
-                    ai_response = generator(masked_input, top_k=1)[0]['sequence']
-                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
+                    # Get AI response using ALBERT's question answering
+                    context = "Your claim was processed successfully and is now in progress."  # You should update the context dynamically
+                    ai_response = qa_pipeline(question=user_input, context=context)
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response['answer']})
                     st.experimental_rerun()
 
         elif page == "Inquiry Form":
