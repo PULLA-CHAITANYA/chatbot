@@ -1,3 +1,5 @@
 streamlit
 transformers
 safetensors
+torch
+tensorflow
