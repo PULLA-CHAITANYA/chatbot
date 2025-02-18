@@ -61,7 +61,7 @@ def main():
         if 'current_page' not in st.session_state:
             st.session_state['current_page'] = "Home"
 
-        page = st.sidebar.radio("Go to:", ["Home", "Claim Status", "Inquiry Form"],
+        page = st.sidebar.radio("Go to:", ["Home", "Claim Enquiry", "Inquiry Form"],
                                key="page_radio",
                                index=["Home", "Claim Status", "Inquiry Form"].index(st.session_state['current_page']))
 
@@ -85,8 +85,8 @@ def main():
                 
                 Stay tuned for continuous improvements and updates to enhance your experience!
             """)
-        elif page == "Claim Status":
-            st.write("## Claim Status")
+        elif page == "Claim Enquiry":
+            st.write("## Claim Enquiry")
             st.write("Check the status of your submitted claims here.")
             
             # Chat interface
