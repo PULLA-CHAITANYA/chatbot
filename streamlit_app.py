@@ -1,8 +1,8 @@
 import streamlit as st
 import time
 import hashlib
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer
-from safetensors import safe_open  # For loading safetensors format
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+import torch
 
 # Placeholder for user data (replace with a database or secure storage)
 users = {}
@@ -22,22 +22,12 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Set the correct path to your local model directory
-model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"
-
-# Load the tokenizer
+# Load ALBERT model and tokenizer explicitly from local directory
+model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"  # Your local model path
+model = AutoModelForQuestionAnswering.from_pretrained(model_path)
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-# Load the model from safetensors format
-try:
-    model = AutoModelForQuestionAnswering.from_pretrained(model_path, 
-                                                          local_files_only=True, 
-                                                          use_safetensors=True)
-    print("Model and tokenizer loaded successfully!")
-except Exception as e:
-    print(f"Error loading model: {e}")
-
-# Create the Question Answering pipeline
+# Create a question answering pipeline
 qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
 
 def main():
@@ -124,17 +114,17 @@ def main():
                     # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response using QA pipeline
-                    context = "This is a sample context where you can provide your claim details."  # You can replace this with dynamic data
-                    ai_response = qa_pipeline({"context": context, "question": user_input})
-
-                    st.session_state['messages'].append({"sender": "AI", "text": ai_response['answer']})
+                    # Get AI response using Question Answering model
+                    context = "Provide context or details about claim here."
+                    result = qa_pipeline(question=user_input, context=context)
+                    ai_response = result['answer']
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.experimental_rerun()
 
         elif page == "Inquiry Form":
             st.write("## Inquiry Form")
             st.write("Submit your inquiries using the form below.")
-            # ... (Add inquiry form elements)
+            # Add inquiry form elements here if needed
 
         if st.button("Logout", key="logout"):
             st.session_state['authenticated'] = False
