@@ -4,13 +4,11 @@ from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 import hashlib
 
 # Load the distilBERT model and tokenizer from Hugging Face
-model_name = "distilbert-base-uncased-distilled-squad"  # Using a popular pre-trained model for QA
+model_name = "distilbert-base-uncased-distilled-squad"
 
-# Use the slow tokenizer explicitly (set use_fast=False) to avoid errors
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
 model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
-# Create a question-answering pipeline
 qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
 
 # Streamlit authentication logic
@@ -59,7 +57,7 @@ def main():
             if st.button("Login", key="login"):
                 if authenticate(username, password):
                     st.session_state['authenticated'] = True
-                    st.session_state['current_page'] = "Home"  # Initialize current_page
+                    st.session_state['current_page'] = "Home"
                     st.success("Login successful!")
                     time.sleep(1)
                     st.experimental_rerun()
@@ -83,8 +81,18 @@ def main():
         st.write(f"### Welcome to {page}!")
 
         if page == "Home":
-            # ... (Home page content - no changes needed)
-            pass  # Placeholder, keep your existing Home page content here
+            st.write("## AI Help Desk")
+            st.write("""
+                Our AI Help Desk is a cutting-edge system designed to streamline your experience by providing quick and accurate responses to insurance-related queries.
+
+                **Key Features:**
+                * Intelligent query handling for insurance plans and claims.
+                * Real-time information retrieval for accurate responses.
+                * Seamless user experience with automated assistance.
+                * AI-powered insights for better decision-making.
+
+                Stay tuned for continuous improvements and updates to enhance your experience!
+            """)
 
         elif page == "Claim Enquiry":
             st.write("## Claim Enquiry")
@@ -101,33 +109,29 @@ def main():
                 if user_input:
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Simulate a claim status (replace with actual database/API call)
-                    # Example statuses: "pending", "approved", "rejected"
-                    claim_status = "pending"  # Replace with actual status retrieval
-
-                    context = f"The claim status for your request is {claim_status}."
-
                     try:
-                        result = qa_pipeline({'context': context, 'question': user_input})
+                        result = qa_pipeline({'question': user_input})
                         ai_response = result['answer']
-                    except Exception as e:  # Catch potential errors during QA
+                    except Exception as e:
                         ai_response = f"Error processing your request: {e}"
-                        st.error(ai_response) # Display the error in Streamlit
+                        st.error(ai_response)
 
                     st.session_state['messages'].append({"sender": "AI", "text": ai_response})
-                    st.experimental_rerun()  # Important: Rerun to update the chat display
-
+                    st.experimental_rerun()
 
         elif page == "Inquiry Form":
-            # ... (Inquiry Form page content - no changes needed)
-            pass # Placeholder, keep your existing Inquiry Form content here
-
+            st.write("## Inquiry Form")
+            st.write("Submit your inquiries using the form below.")
+            # Add your inquiry form elements here
+            st.text_input("Your Name", key="name")
+            st.text_area("Your Inquiry", key="inquiry")
+            st.button("Submit Inquiry", key="submit_inquiry") # Add functionality as needed
 
         if st.button("Logout", key="logout"):
             st.session_state['authenticated'] = False
-            if 'current_page' in st.session_state:  # Check if it exists before popping
+            if 'current_page' in st.session_state:
                 st.session_state.pop('current_page')
-            if 'messages' in st.session_state: # Clear chat messages on logout
+            if 'messages' in st.session_state:
                 st.session_state.pop('messages')
             st.experimental_rerun()
 
