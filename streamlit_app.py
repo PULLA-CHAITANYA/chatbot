@@ -6,7 +6,7 @@ import hashlib
 # Load the ALBERT model and tokenizer from Hugging Face
 model_name = "Chaithu93839/my-ai-help-desk"  # Replace with your model on Hugging Face
 
-# Use the slow tokenizer explicitly (set use_fast=False)
+# Use the slow tokenizer explicitly (set use_fast=False) to avoid errors
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
 model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
@@ -115,7 +115,8 @@ def main():
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
                     # Get AI response using the QA pipeline
-                    result = qa_pipeline({'context': "The claim status for your request is pending.", 'question': user_input})
+                    context = "The claim status for your request is pending."  # This context could be dynamic or fetched from a database
+                    result = qa_pipeline({'context': context, 'question': user_input})
                     ai_response = result['answer']
                     st.session_state['messages'].append({"sender": "AI", "text": ai_response})
                     st.experimental_rerun()
