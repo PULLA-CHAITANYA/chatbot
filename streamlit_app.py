@@ -1,9 +1,8 @@
-import os
 import streamlit as st
 import time
 import hashlib
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
-from safetensors import safe_open
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+from safetensors import safe_open  # For loading safetensors format
 
 # Placeholder for user data (replace with a database or secure storage)
 users = {}
@@ -23,31 +22,23 @@ def authenticate(username, password):
         return stored_hash == entered_hash
     return False
 
-# Define the path to the model directory
+# Set the correct path to your local model directory
 model_path = "C:/Users/chait/OneDrive/Desktop/Hackathon/GenFormat/results/checkpoint_5"
 
-# Check if safetensors file exists
-safetensors_file = os.path.join(model_path, "model.safetensors")
-if os.path.exists(safetensors_file):
-    print("Loading model from safetensors file...")
-    # Open safetensors file
-    with safe_open(safetensors_file, framework="pt") as f:
-        model_weights = {key: f.get_tensor(key) for key in f.keys()}
-
-    # Load model and assign the weights
-    model = AutoModelForQuestionAnswering.from_pretrained(model_path, config=model_path)
-    model.load_state_dict(model_weights)
-    print("Model loaded successfully with safetensors weights.")
-else:
-    print("No safetensors file found. Please ensure the model is correctly placed.")
-    # Fallback for loading a regular pytorch model
-    model = AutoModelForQuestionAnswering.from_pretrained(model_path)
-
-# Load tokenizer explicitly from the model directory
+# Load the tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
+# Load the model from safetensors format
+try:
+    model = AutoModelForQuestionAnswering.from_pretrained(model_path, 
+                                                          local_files_only=True, 
+                                                          use_safetensors=True)
+    print("Model and tokenizer loaded successfully!")
+except Exception as e:
+    print(f"Error loading model: {e}")
+
 # Create the Question Answering pipeline
-qa_pipeline = pipeline("question-answering", model=model, tokenizer=tokenizer)
+qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
 
 def main():
     st.set_page_config(page_title="AI Dashboard", page_icon="🤖", layout="wide")
@@ -133,11 +124,11 @@ def main():
                     # Simulate user input
                     st.session_state['messages'].append({"sender": "User", "text": user_input})
 
-                    # Get AI response using Question Answering model
-                    context = "The insurance claim process includes several steps including verification, approval, and disbursement."  # Replace with your actual context data
-                    result = qa_pipeline(question=user_input, context=context)
-                    ai_response = result['answer']
-                    st.session_state['messages'].append({"sender": "AI", "text": ai_response})
+                    # Get AI response using QA pipeline
+                    context = "This is a sample context where you can provide your claim details."  # You can replace this with dynamic data
+                    ai_response = qa_pipeline({"context": context, "question": user_input})
+
+                    st.session_state['messages'].append({"sender": "AI", "text": ai_response['answer']})
                     st.experimental_rerun()
 
         elif page == "Inquiry Form":
